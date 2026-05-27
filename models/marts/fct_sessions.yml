@@ -1,0 +1,62 @@
+version: 2
+
+models:
+  - name: fct_sessions
+    description: >
+      Core fact table at the session-level grain for the e-commerce website/app.
+      
+      [Data Grain] Each row represents an independent user session.
+      [Business Value] Aggregates underlying pageviews and events. Designed specifically for building key growth metrics like 'User Funnel' and 'Cart Abandonment Rate' in downstream BI tools.
+
+    columns:
+      # ==========================================
+      # Primary & Foreign Keys
+      # ==========================================
+      - name: session_id
+        description: "Primary key of the session."
+        tests:
+          - unique
+          - not_null
+
+      - name: user_id
+        description: "Foreign key linking to dim_users. Note: This field may be NULL for anonymous/guest visitors who have not logged in."
+
+      # ==========================================
+      # Session Attributes (Dimensions)
+      # ==========================================
+      - name: browser
+        description: "Type of browser used by the user during this session (e.g., Chrome, Safari)."
+
+      - name: traffic_source
+        description: "The traffic acquisition channel that drove this session (e.g., Organic, Email, Facebook)."
+
+      # ==========================================
+      # Derived Business Metrics
+      # ==========================================
+      - name: is_abandoned_cart
+        description: "Derived business tag (boolean): Flags 'high-intent churn' sessions. Defined as: the user added an item to the cart (has_added_to_cart = 1) but ultimately did not complete the purchase (has_purchased = 0)."
+
+      - name: session_duration_seconds
+        description: "Session duration in seconds. Calculated from session_start_at_utc and session_end_at_utc."
+        tests:
+          - not_null
+
+      # ==========================================
+      # Funnel Status (Booleans/Flags)
+      # ==========================================
+      - name: has_viewed_home
+        description: "Funnel Step 1: Whether the user viewed the home page during the session."
+
+      - name: has_purchased
+        description: "Funnel Final Step: Whether the user successfully completed a purchase during the session."
+
+      # ==========================================
+      # Timestamps
+      # ==========================================
+      - name: session_start_at_utc
+        description: "Session start time (UTC). The timestamp of the first event triggered under this session_id."
+        tests:
+          - not_null
+
+      - name: purchase_at_utc
+        description: "Timestamp of successful payment (UTC). NULL if no purchase was made during this session."

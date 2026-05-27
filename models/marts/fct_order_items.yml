@@ -1,0 +1,101 @@
+version: 2
+
+models:
+  - name: fct_order_items
+    description: >
+      Core fact table at the order-item grain. 
+      This model serves as a denormalized 'One Big Table' (OBT), combining transactional order item metrics with rich dimensional attributes (users, products, and distribution centers). 
+      It is optimized for downstream BI tools to easily slice and dice revenue and margin metrics by various user demographics and product categories.
+
+    columns:
+      # ==========================================
+      # Primary & Foreign Keys
+      # ==========================================
+      - name: order_item_id
+        description: "Primary key of the order item."
+        tests:
+          - unique
+          - not_null
+
+      - name: order_id
+        description: "Foreign key linking to the parent order. Multiple order_item_id can share the same order_id."
+        tests:
+          - not_null
+
+      - name: user_id
+        description: "Foreign key linking to the customer who placed the order."
+        tests:
+          - not_null
+
+      - name: product_id
+        description: "Foreign key linking to the purchased product."
+        tests:
+          - not_null
+          
+      - name: distribution_center_id
+        description: "Foreign key linking to the distribution center fulfilling the item."
+
+      # ==========================================
+      # Transactional Status & Timestamps
+      # ==========================================
+      - name: status
+        description: "Current lifecycle status of the order item fulfillment."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Shipped', 'Processing', 'Complete', 'Cancelled', 'Returned']
+
+      - name: shipped_at_utc
+        description: "Timestamp when the item was shipped, standardized to UTC."
+
+      - name: delivered_at_utc
+        description: "Timestamp when the item was delivered to the customer, standardized to UTC."
+
+      - name: inbound_created_at_utc
+        description: "Timestamp when the item's inbound record was created, standardized to UTC."
+
+      # ==========================================
+      # Financial Metrics
+      # ==========================================
+      - name: sale_price
+        description: "The price at which the product was sold to the customer."
+        tests:
+          - not_null
+        
+      - name: inventory_cost
+        description: "The underlying cost of the item from the inventory."
+        tests:
+          - not_null
+
+      - name: item_gross_margin
+        description: "Calculated profitability metric: sale_price minus inventory_cost."
+        tests:
+          - not_null
+
+      # ==========================================
+      # User Demographics (Denormalized)
+      # ==========================================
+      - name: user_country
+        description: "Customer's residential country, joined from the users dimension."
+
+      - name: user_traffic_source
+        description: "The acquisition channel through which the user originally signed up (e.g., Search, Organic, Facebook)."
+
+      # ==========================================
+      # Product Information (Denormalized)
+      # ==========================================
+      - name: product_brand
+        description: "Brand name of the purchased product."
+
+      - name: product_category
+        description: "High-level category of the product (e.g., Active, Sweaters, Pants)."
+
+      - name: product_department
+        description: "Department the product belongs to (e.g., Men, Women)."
+
+      # ==========================================
+      # Distribution Center Information (Denormalized)
+      # ==========================================
+      - name: distribution_center_name
+        description: "Name of the distribution center handling the inventory item."
