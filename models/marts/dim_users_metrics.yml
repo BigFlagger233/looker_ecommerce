@@ -1,0 +1,57 @@
+version: 2
+
+models:
+  - name: dim_users_metrics
+    description: >
+      Dimension table at the user-level grain for the e-commerce store.
+
+      [Data Grain] Each row represents an independent user.
+      [Business Value] Highly denormalized user entity table. It pre-calculates crucial multi-timeframe cohort metrics (LTV, margin, and order frequency across 7d, 30d, 90d, 180d, and 360d windows). Designed to empower marketing teams to analyze User Lifetime Value across various geographic demographics and acquisition channels.
+
+    columns:
+      # ==========================================
+      # Primary Key
+      # ==========================================
+      - name: user_id
+        description: "Primary key. Unique identifier for each user."
+        tests:
+          - unique
+          - not_null
+
+      # ==========================================
+      # User Demographics
+      # ==========================================
+      - name: country
+        description: "Residential country of the user."
+
+      - name: state
+        description: "Residential state of the user."
+
+      # ==========================================
+      # Acquisition & Source
+      # ==========================================
+      - name: traffic_source 
+        description: "The acquisition channel through which the user originally signed up (e.g., Search, Organic, Facebook)."
+
+      - name: user_created_at_utc
+        description: "Timestamp when the user account was created (UTC)."
+        tests:
+          - not_null
+
+      # ==========================================
+      # First Time Purchase Behavior
+      # ==========================================
+      - name: first_order_time
+        description: "Timestamp of the user's first purchase (UTC). NULL if the user has never made a purchase (registered but not activated)."
+
+      - name: first_order_price
+        description: "Total order amount of the user's first purchase. NULL if the user has never made a purchase."
+
+      # ==========================================
+      # LTV and Margin Cohorts (Representative Columns)
+      # ==========================================
+      - name: ltv_7d
+        description: "7-day Life Time Value (LTV) after the first purchase. Measures short-term revenue generation. NULL for non-purchasing users."
+
+      - name: ltv_margin_7d
+        description: "7-day net margin after the first purchase. Calculated by subtracting the inventory cost of items from the total revenue during this 7-day period. NULL for non-purchasing users."

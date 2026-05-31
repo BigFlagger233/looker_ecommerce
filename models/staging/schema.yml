@@ -2,8 +2,10 @@ version: 2
 
 models:
   - name: stg_users
+    description: "Staging model for user demographics. Standardizes column names and casts timestamps to UTC."
     columns:
       - name: user_id
+        description: "Primary key. Unique identifier for each user."
         tests:
           - unique
           - not_null
@@ -20,8 +22,10 @@ models:
                 values: ['M', 'F']
           
   - name: stg_distribution_centers
+    description: "Staging model for distribution centers."
     columns:
       - name: distribution_center_id
+        description: "Primary key. Unique identifier for each distribution center."
         tests:
           - unique
           - not_null
@@ -30,19 +34,24 @@ models:
           - unique
           - not_null
       - name: latitude
+        description: "Latitude coordinate of the distribution center."
         tests:
           - not_null
       - name: longitude
+        description: "Longitude coordinate of the distribution center."
         tests:
           - not_null
 
   - name: stg_events
+    description: "Staging model for user event logs. Granularity is one row per event."
     columns:
       - name: event_id
+        description: "Unique identifier for each event."
         tests:
           - unique
           - not_null
       - name: session_id
+        description: "Identifier for the session during which the event occurred."
         tests:
           - not_null
       - name: created_at_utc
@@ -50,8 +59,10 @@ models:
           - not_null
 
   - name: stg_inventory_items
+    description: "Staging model for inventory items. Granularity is one row per physical item."
     columns:
       - name: inventory_item_id
+        description: "Unique identifier for each inventory item."
         tests:
           - unique
           - not_null
@@ -74,12 +85,15 @@ models:
           - not_null
 
   - name: stg_order_items
+    description: "Staging model for individual items within an order. Granularity is one row per order item."
     columns:
       - name: order_item_id
+        description: "Unique identifier for each order item."
         tests:
           - unique
           - not_null
       - name: order_id
+        description: "Identifier for the associated order."
         tests:
           - not_null
           - relationships:
@@ -116,8 +130,10 @@ models:
           - not_null
 
   - name: stg_orders
+    description: "Staging model for order-level headers."
     columns:
       - name: order_id
+        description: "Unique identifier for each order."
         tests:
           - unique
           - not_null
@@ -143,6 +159,7 @@ models:
                 values: ['Processing', 'Shipped', 'Complete', 'Cancelled', 'Returned']
 
   - name: stg_products
+    description: "Staging model for product master data."
     columns:
       - name: product_id
         tests:
