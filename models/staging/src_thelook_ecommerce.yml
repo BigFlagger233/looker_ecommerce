@@ -4,52 +4,203 @@ sources:
   - name: thelook_ecommerce
     database: bigquery-public-data
     schema: thelook_ecommerce
+    description: "Raw tables from BigQuery public TheLook Ecommerce dataset. These sources are used to model users, orders, order items, inventory, products, events, and distribution centers."
+
     tables:
       - name: users
+        description: "Raw user records. One row represents one registered user."
+        config:
+          loaded_at_field: created_at
+          freshness:
+            warn_after:
+              count: 24
+              period: hour
+            error_after:
+              count: 48
+              period: hour
         columns:
           - name: id
+            description: "Primary key of the user."
             tests:
               - unique
               - not_null
-              
+          - name: created_at
+            description: "Timestamp when the user was created."
+            tests:
+              - not_null
+          - name: gender
+            description: "User gender."
+            tests:
+              - accepted_values:
+                  arguments:
+                    values: ['F', 'M']
+
       - name: events
+        description: "Raw web event records. One row represents one user event."
+        config:
+          loaded_at_field: created_at
+          freshness:
+            warn_after:
+              count: 12
+              period: hour
+            error_after:
+              count: 24
+              period: hour
         columns:
           - name: id
+            description: "Primary key of the event."
             tests:
               - unique
+              - not_null
+          - name: user_id
+            description: "Foreign key to users. May be null for anonymous events."
+            tests:
+              - relationships:
+                  arguments:
+                    to: source('thelook_ecommerce', 'users')
+                    field: id
+          - name: created_at
+            description: "Timestamp when the event occurred."
+            tests:
               - not_null
 
       - name: distribution_centers
+        description: "Raw distribution center records. One row represents one distribution center."
         columns:
           - name: id
+            description: "Primary key of the distribution center."
             tests:
               - unique
               - not_null
 
       - name: inventory_items
+        description: "Raw inventory item records. One row represents one physical inventory item."
+        config:
+          loaded_at_field: created_at
+          freshness:
+            warn_after:
+              count: 48
+              period: hour
+            error_after:
+              count: 72
+              period: hour
         columns:
           - name: id
+            description: "Primary key of the inventory item."
             tests:
               - unique
+              - not_null
+          - name: product_id
+            description: "Foreign key to products."
+            tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('thelook_ecommerce', 'products')
+                    field: id
+          - name: created_at
+            description: "Timestamp when the inventory item was created."
+            tests:
               - not_null
 
       - name: order_items
+        description: "Raw order item records. One row represents one product item within an order."
+        config:
+          loaded_at_field: created_at
+          freshness:
+            warn_after:
+              count: 24
+              period: hour
+            error_after:
+              count: 48
+              period: hour
         columns:
           - name: id
+            description: "Primary key of the order item."
             tests:
               - unique
               - not_null
+          - name: order_id
+            description: "Foreign key to orders."
+            tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('thelook_ecommerce', 'orders')
+                    field: order_id
+          - name: user_id
+            description: "Foreign key to users."
+            tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('thelook_ecommerce', 'users')
+                    field: id
+          - name: product_id
+            description: "Foreign key to products."
+            tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('thelook_ecommerce', 'products')
+                    field: id
+          - name: created_at
+            description: "Timestamp when the order item was created."
+            tests:
+              - not_null
+          - name: status
+            description: "Order item status."
+            tests:
+              - accepted_values:
+                  arguments:
+                    values: ['Cancelled', 'Complete', 'Processing', 'Returned', 'Shipped']
 
       - name: orders
+        description: "Raw order records. One row represents one order."
+        config:
+          loaded_at_field: created_at
+          freshness:
+            warn_after:
+              count: 24
+              period: hour
+            error_after:
+              count: 48
+              period: hour
         columns:
           - name: order_id
+            description: "Primary key of the order."
             tests:
               - unique
               - not_null
+          - name: user_id
+            description: "Foreign key to users."
+            tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('thelook_ecommerce', 'users')
+                    field: id
+          - name: created_at
+            description: "Timestamp when the order was created."
+            tests:
+              - not_null
+          - name: status
+            description: "Current order status."
+            tests:
+              - accepted_values:
+                  arguments:
+                    values: ['Cancelled', 'Complete', 'Processing', 'Returned', 'Shipped']
 
       - name: products
+        description: "Raw product catalog. One row represents one product SKU."
         columns:
           - name: id
+            description: "Primary key of the product."
             tests:
               - unique
               - not_null
+          - name: cost
+            description: "Product cost."
+            tests:
+              - not_null
+              - not_negative
